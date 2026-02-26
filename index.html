@@ -6,7 +6,6 @@
     <title>Black Dave - Blackjack</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Custom styles for mobile-first, full-screen layout, and aesthetics */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         :root {
@@ -40,7 +39,6 @@
             gap: 0.5rem; 
         }
 
-        /* Card Styling */
         .card {
             width: 45px; 
             height: 70px;
@@ -77,7 +75,6 @@
             white-space: nowrap; 
         }
 
-        /* Felt table area - Constrained Height */
         .dealer-area, .player-area {
             background-color: var(--felt-green);
             border-radius: 0.5rem;
@@ -93,7 +90,6 @@
             border: 3px solid #f6e05e; 
         }
 
-        /* General Button Styling - Rounded Rectangles */
         .btn-base {
             @apply font-extrabold py-3 rounded-xl transition duration-200 shadow-xl transform active:scale-95 text-lg;
         }
@@ -104,18 +100,15 @@
             @apply opacity-50 cursor-not-allowed;
         }
 
-        /* Primary Action Buttons (DEAL/HIT/STAND/DOUBLE) - Increased height for thumb-clicking */
         .action-button-large {
             height: 75px; 
             @apply text-xl;
         }
 
-        /* Betting amount display (Made much larger) */
         #current-betting-amount-display {
             @apply text-3xl font-black text-center text-yellow-300 tracking-wide mb-2;
         }
 
-        /* Custom Slider Styling */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -142,6 +135,7 @@
     </style>
 </head>
 <body>
+
 <style>
     .back-hub {
         position: absolute;
@@ -155,7 +149,7 @@
         font-family: sans-serif;
         font-weight: bold;
         border: 1px solid #ffd700;
-        z-index: 9999; 
+        z-index: 9999;
         transition: 0.3s;
     }
     .back-hub:hover {
@@ -176,17 +170,18 @@
                 <span class="text-xs uppercase text-gray-400">CHIPS</span>
                 <span id="chips-display" class="animated-value text-green-400">$2,000</span>
             </div>
-           <div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50" style="display: none;">
-    <div id="youtube-player" class="w-full h-full rounded-lg"></div>
-    <button id="close-youtube-btn" class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-lg z-51">✕</button>
-</div>
 
-<div id="youtube-input-panel" class="fixed bottom-4 left-4 bg-gray-800 p-3 rounded-lg border-2 border-yellow-400 z-50" style="display: none;">
-    <input type="text" id="youtube-url-input" placeholder="Enter YouTube URL" class="w-full px-2 py-1 rounded text-black text-sm mb-2">
-    <button id="load-youtube-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm font-bold">Load Video</button>
-</div>
+            <div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50" style="display: none;">
+                <div id="youtube-player" class="w-full h-full rounded-lg"></div>
+                <button id="close-youtube-btn" class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-lg z-51">✕</button>
+            </div>
 
-<button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
+            <div id="youtube-input-panel" class="fixed bottom-4 left-4 bg-gray-800 p-3 rounded-lg border-2 border-yellow-400 z-50" style="display: none;">
+                <input type="text" id="youtube-url-input" placeholder="Enter YouTube URL" class="w-full px-2 py-1 rounded text-black text-sm mb-2">
+                <button id="load-youtube-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm font-bold">Load Video</button>
+            </div>
+
+            <button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
 
             <div class="flex flex-col items-center">
                 <span class="text-xs uppercase text-gray-400">HIGH SCORE</span>
@@ -242,7 +237,6 @@
             <button id="all-in-btn" class="btn-base bg-red-700 hover:bg-red-800 text-white w-full py-2">ALL IN</button>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -353,12 +347,10 @@
         updateHighScore();
         betSlider.max = Math.max(10, chips);
         
-        // Ensure slider value doesn't exceed new chip count
         if (parseInt(betSlider.value) > chips) {
             betSlider.value = chips;
             currentBettingAmount = chips;
         } else {
-            // Keep the slider at the same value it was
             currentBettingAmount = parseInt(betSlider.value);
         }
         currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
@@ -386,9 +378,6 @@
     function resetRound() {
         playerHand = []; dealerHand = []; isGameActive = false; canDoubleDown = false; currentBet = 0;
         
-        // MAINTAIN SLIDER POSITION: 
-        // We don't overwrite currentBettingAmount with a default 10 or 100.
-        // We use whatever the slider is currently set to, capping it at current chips.
         currentBettingAmount = Math.max(10, Math.min(parseInt(betSlider.value), chips));
         betSlider.value = currentBettingAmount;
         
@@ -484,7 +473,6 @@
         }
     }
 
-    // YouTube Integration
     function loadYouTubeAPI() {
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
