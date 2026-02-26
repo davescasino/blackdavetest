@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Black Dave - Blackjack</title>
-    <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Custom styles for mobile-first, full-screen layout, and aesthetics */
@@ -167,7 +166,6 @@
     </style>
 </head>
 <body>
-<!-- Dave's Casino Standard Hub Button -->
 <style>
     .back-hub {
         position: absolute;
@@ -194,128 +192,100 @@
 <a href="https://davescasino.github.io/davescasino" class="back-hub">⬅ Back to Hub</a>
 
 <div id="game-container">
-    <!-- Top Status Section -->
     <div class="flex flex-col gap-1 flex-shrink-0">
         <h1 class="text-2xl font-black text-center text-yellow-400 tracking-wider">BLACK DAVE</h1>
         
-        <!-- Chip/Bet/High Score Status -->
         <div class="grid grid-cols-3 gap-2 text-xl font-black bg-gray-800 p-2 rounded-lg border border-gray-700">
-            <!-- CHIPS -->
             <div class="flex flex-col items-start">
                 <span class="text-xs uppercase text-gray-400">CHIPS</span>
                 <span id="chips-display" class="animated-value text-green-400">$2,000</span>
             </div>
-           <!-- YouTube Player Section - Centered Right and Larger -->
-<div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50">
+           <div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50">
     <div id="youtube-player" class="w-full h-full rounded-lg"></div>
     <button id="close-youtube-btn" class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-lg z-51">✕</button>
 </div>
 
-<!-- YouTube Link Input (Optional) -->
 <div id="youtube-input-panel" class="fixed bottom-4 left-4 bg-gray-800 p-3 rounded-lg border-2 border-yellow-400 z-50" style="display: none;">
     <input type="text" id="youtube-url-input" placeholder="Enter YouTube URL" class="w-full px-2 py-1 rounded text-black text-sm mb-2">
     <button id="load-youtube-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm font-bold">Load Video</button>
 </div>
 
-<!-- Toggle Button -->
 <button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
 
-            <!-- HIGH SCORE -->
             <div class="flex flex-col items-center">
                 <span class="text-xs uppercase text-gray-400">HIGH SCORE</span>
                 <span id="high-score-display" class="text-yellow-400">$2,000</span>
             </div>
 
-            <!-- CURRENT WAGER -->
             <div class="flex flex-col items-end">
                 <span class="text-xs uppercase text-gray-400">WAGER</span>
                 <span id="current-wager-display" class="text-yellow-300">$0</span>
             </div>
         </div>
 
-        <!-- Game Message Area -->
         <div id="message-box" class="h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 border-gray-700">
             Place your bet or press DEAL.
         </div>
     </div>
 
-    <!-- Game Table Area (Constrained Height) -->
     <div class="flex-shrink-0 flex flex-col gap-1">
-        <!-- Dealer Hand -->
         <div class="dealer-area">
             <h2 class="text-sm font-bold text-gray-200 mb-1 text-center">DEALER (<span id="dealer-score-display">?</span>)</h2>
             <div id="dealer-hand" class="hand-display">
-                <!-- Dealer cards go here -->
-            </div>
+                </div>
         </div>
 
-        <!-- Player Hand -->
         <div class="player-area">
             <h2 class="text-sm font-bold text-gray-100 mb-1 text-center">PLAYER (<span id="player-score-display">0</span>)</h2>
             <div id="player-hand" class="hand-display">
-                <!-- Player cards go here -->
-            </div>
+                </div>
         </div>
     </div>
     
-    <!-- PRIMARY ACTION ROW (HIT, STAND, DOUBLE, DEAL, NEW ROUND) -->
     <div id="primary-action-row" class="flex-shrink-0 mt-2">
         
-        <!-- Game Action Buttons (Hit, Stand, Double) -->
         <div id="action-controls" class="flex justify-between gap-2" style="display: none;">
             
-            <!-- Left: DOUBLE -->
             <button id="double-btn" class="btn-base action-button-large bg-yellow-600 hover:bg-yellow-700 text-gray-900 w-1/3">DOUBLE</button>
 
-            <!-- Right: HIT & STAND grouped -->
             <div class="flex w-2/3 gap-2">
                 <button id="hit-btn" class="btn-action action-button-large w-1/2">HIT</button>
                 <button id="stand-btn" class="btn-action action-button-large w-1/2">STAND</button>
             </div>
         </div>
 
-        <!-- Betting/New Round Action Button Holder (DEAL/NEW ROUND) -->
         <div id="bet-deal-controls" style="display: block;">
-            <!-- Primary DEAL button - Orange and Thumb Friendly -->
             <button id="place-bet-btn" class="btn-base action-button-large bg-orange-500 hover:bg-orange-600 text-white w-full">DEAL</button>
 
-            <!-- New Game Button (Hidden until game end) -->
             <button id="new-game-btn" class="btn-base action-button-large bg-yellow-500 hover:bg-yellow-600 text-gray-900 w-full" style="display: none;">NEW ROUND</button>
         </div>
     </div>
 
-    
-    <!-- BETTING CONTROLS -->
-    <div id="betting-controls" class="flex flex-col gap-2 mt-3">
+    <div id="betting-controls" class="flex flex-col gap-1 mt-3">
         
         <div id="current-betting-amount-display">
             BET: <span id="current-betting-display">$0</span>
         </div>
-
-        <input 
-            type="range" 
-            id="bet-slider"
-            min="10"
-            max="2000"
-            step="10"
-            value="10"
-            class="w-full"
-        >
-
-        <div class="flex justify-center gap-2">
-            <button id="clear-bet-btn" class="btn-base bg-gray-600 hover:bg-gray-500 text-white w-1/2">
-                CLEAR
-            </button>
-            <button id="all-in-btn" class="btn-base bg-red-600 hover:bg-red-700 text-white w-1/2">
-                ALL IN
-            </button>
+        
+        <div class="flex justify-center gap-2 mb-2">
+            <button id="clear-bet-btn" class="btn-base bg-gray-600 hover:bg-gray-500 text-white w-2/5">CLEAR</button>
+            <button id="repeat-bet-btn" class="btn-base bg-green-600 hover:bg-green-700 text-white w-2/5">REPEAT LAST ($<span id="repeat-amount-display">0</span>)</button>
         </div>
-
+        
+        <div id="bet-pile" class="mb-2"></div>
+        
+        <div class="flex justify-center gap-2 mt-2 mb-1">
+            <button class="chip-button chip-10" onclick="addChipToBet(10)">10</button>
+            <button class="chip-button chip-50" onclick="addChipToBet(50)">50</button>
+            <button class="chip-button chip-100" onclick="addChipToBet(100)">100</button>
+            <button class="chip-button chip-500" onclick="addChipToBet(500)">500</button>
+        </div>
     </div>
 
 </div>
 
-
+<div class="fixed bottom-4 right-4 text-4xl select-none pointer-events-none opacity-80 hover:opacity-100 transition-opacity z-[60]">
+    😊
 </div>
 
 <script>
@@ -588,11 +558,7 @@
         }
         
         // Always check high score when chips change
-        updateHighScore();
-        if (typeof betSlider !== 'undefined') {
-            updateSliderLimits();
-            currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        } 
+        updateHighScore(); 
 
         // Update last bet display and repeat button
         renderBetPile();
@@ -627,10 +593,8 @@
     function clearBet() {
         if (isGameActive) return;
         currentBettingAmount = 0;
-        betSlider.value = 0;
-        currentBettingDisplay.textContent = formatCurrency(0);
-        saveSliderPosition();
-        showMessage('Bet cleared.');
+        updateUI();
+        showMessage('Bet cleared. Place new chips.');
     }
 
     /** Repeat the last bet amount */
@@ -864,8 +828,7 @@
             placeBetBtn.style.display = 'none';
             newGameBtn.style.display = 'block';
             // Reset chips to $2000 on restart
-            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 0; loadSliderPosition();
-        resetRound(); };
+            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 0; resetRound(); };
         } else {
             newGameBtn.textContent = 'NEW ROUND';
             placeBetBtn.style.display = 'none';
@@ -873,52 +836,6 @@
             newGameBtn.onclick = resetRound;
         }
     }
-
-    
-
-    // --- SLIDER BET SYSTEM ---
-    const betSlider = document.getElementById('bet-slider');
-    const allInBtn = document.getElementById('all-in-btn');
-
-    function updateSliderLimits() {
-        betSlider.max = chips;
-        if (parseInt(betSlider.value) > chips) {
-            betSlider.value = chips;
-        }
-    }
-
-    function saveSliderPosition() {
-        localStorage.setItem('blackjackSliderValue', betSlider.value);
-    }
-
-    function loadSliderPosition() {
-        const saved = localStorage.getItem('blackjackSliderValue');
-        if (saved !== null) {
-            let val = parseInt(saved);
-            if (isNaN(val) || val < 10) val = 10;
-            betSlider.value = Math.min(val, chips);
-            currentBettingAmount = Math.min(val, chips);
-        } else {
-            betSlider.value = Math.min(10, chips);
-            currentBettingAmount = Math.min(10, chips);
-        }
-    }
-
-    betSlider.addEventListener('input', () => {
-        if (isGameActive) return;
-        currentBettingAmount = parseInt(betSlider.value);
-        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        saveSliderPosition();
-    });
-
-    allInBtn.addEventListener('click', () => {
-        if (isGameActive) return;
-        currentBettingAmount = chips;
-        betSlider.value = chips;
-        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        saveSliderPosition();
-    });
-
 
     // --- Initialization and Event Listeners ---
 
@@ -928,7 +845,7 @@
         
         // 2. Set up event listeners
         clearBetBtn.addEventListener('click', clearBet);
-        
+        repeatBetBtn.addEventListener('click', repeatLastBet);
         placeBetBtn.addEventListener('click', placeBet);
         hitBtn.addEventListener('click', hit);
         standBtn.addEventListener('click', stand);
@@ -936,7 +853,6 @@
         
         // 3. Final setup
         updateUI(); // Renders initial chips, high score, and betting buttons
-        loadSliderPosition();
         resetRound();
     };
     // --- Keyboard Controls ---
