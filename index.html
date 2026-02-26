@@ -103,13 +103,12 @@
             @apply text-3xl font-black text-center text-yellow-300 tracking-wide mb-2;
         }
 
-        /* Slider Styling */
+        /* Fixed Slider Styling */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
             background: transparent;
         }
-
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
             height: 24px;
@@ -120,7 +119,6 @@
             margin-top: -8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
-
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
             height: 8px;
@@ -132,7 +130,7 @@
 </head>
 <body>
 
-<a href="https://davescasino.github.io/davescasino" class="back-hub fixed top-5 left-5 p-2 bg-gray-800 text-yellow-400 border border-yellow-400 rounded font-bold z-50">⬅ Back to Hub</a>
+<a href="https://davescasino.github.io/davescasino" class="fixed top-5 left-5 p-2 bg-gray-800 text-yellow-400 border border-yellow-400 rounded font-bold z-50">⬅ Back to Hub</a>
 
 <div id="game-container">
     <div class="flex flex-col gap-1 flex-shrink-0">
@@ -141,14 +139,12 @@
         <div class="grid grid-cols-3 gap-2 text-xl font-black bg-gray-800 p-2 rounded-lg border border-gray-700">
             <div class="flex flex-col items-start">
                 <span class="text-xs uppercase text-gray-400">CHIPS</span>
-                <span id="chips-display" class="animated-value text-green-400">$2,000</span>
+                <span id="chips-display" class="text-green-400">$2,000</span>
             </div>
-
             <div class="flex flex-col items-center">
                 <span class="text-xs uppercase text-gray-400">HIGH SCORE</span>
                 <span id="high-score-display" class="text-yellow-400">$2,000</span>
             </div>
-
             <div class="flex flex-col items-end">
                 <span class="text-xs uppercase text-gray-400">WAGER</span>
                 <span id="current-wager-display" class="text-yellow-300">$0</span>
@@ -156,7 +152,7 @@
         </div>
 
         <div id="message-box" class="h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 border-gray-700">
-            Adjust your bet and press DEAL.
+            Slide to bet and press DEAL.
         </div>
     </div>
 
@@ -165,7 +161,6 @@
             <h2 class="text-sm font-bold text-gray-200 mb-1 text-center">DEALER (<span id="dealer-score-display">?</span>)</h2>
             <div id="dealer-hand" class="hand-display"></div>
         </div>
-
         <div class="player-area">
             <h2 class="text-sm font-bold text-gray-100 mb-1 text-center">PLAYER (<span id="player-score-display">0</span>)</h2>
             <div id="player-hand" class="hand-display"></div>
@@ -180,19 +175,18 @@
                 <button id="stand-btn" class="btn-action action-button-large w-1/2">STAND</button>
             </div>
         </div>
-
         <div id="bet-deal-controls" style="display: block;">
             <button id="place-bet-btn" class="btn-base action-button-large bg-orange-500 hover:bg-orange-600 text-white w-full">DEAL</button>
             <button id="new-game-btn" class="btn-base action-button-large bg-yellow-500 hover:bg-yellow-600 text-gray-900 w-full" style="display: none;">NEW ROUND</button>
         </div>
     </div>
 
-    <div id="betting-controls" class="flex flex-col gap-3 mt-3">
+    <div id="betting-controls" class="flex flex-col gap-2 mt-3">
         <div id="current-betting-amount-display">
             BET: <span id="current-betting-display">$10</span>
         </div>
         
-        <div class="px-2">
+        <div class="px-2 mb-2">
             <input type="range" id="bet-slider" min="10" max="2000" step="10" value="10" class="w-full">
             <div class="flex justify-between text-xs font-bold text-gray-400 mt-1">
                 <span>$10</span>
@@ -218,7 +212,7 @@
     const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
     let chips = 2000;
-    let highScore = 0; 
+    let highScore = 2000;
     let currentBet = 0; 
     let currentBettingAmount = 10; 
     let lastBetAmount = 0; 
@@ -238,10 +232,9 @@
     const playerHandEl = document.getElementById('player-hand');
     const dealerScoreDisplay = document.getElementById('dealer-score-display');
     const playerScoreDisplay = document.getElementById('player-score-display');
+    const betSlider = document.getElementById('bet-slider');
     
     const bettingControls = document.getElementById('betting-controls');
-    const betSlider = document.getElementById('bet-slider');
-    const allInBtn = document.getElementById('all-in-btn');
     const actionControls = document.getElementById('action-controls');
     const betDealControls = document.getElementById('bet-deal-controls');
     
@@ -251,13 +244,14 @@
     const doubleBtn = document.getElementById('double-btn');
     const newGameBtn = document.getElementById('new-game-btn');
     const repeatBetBtn = document.getElementById('repeat-bet-btn');
+    const allInBtn = document.getElementById('all-in-btn');
 
     const formatCurrency = (amount) => '$' + amount.toLocaleString('en-US');
 
     function loadHighScore() {
         const storedScore = localStorage.getItem('blackjackHighScore');
-        highScore = (storedScore && !isNaN(parseInt(storedScore))) ? parseInt(storedScore) : chips;
-        localStorage.setItem('blackjackHighScore', highScore);
+        highScore = (storedScore && !isNaN(parseInt(storedScore))) ? parseInt(storedScore) : 2000;
+        highScoreDisplay.textContent = formatCurrency(highScore);
     }
     
     function updateHighScore() {
@@ -268,14 +262,14 @@
         highScoreDisplay.textContent = formatCurrency(highScore);
     }
 
-    // --- NEW SLIDER PERSISTENCE LOGIC ---
-    function saveSliderPosition(val) {
-        localStorage.setItem('blackjackSavedSlider', val);
+    // SAVING SLIDER POSITION
+    function saveSlider() {
+        localStorage.setItem('blackjack_saved_bet', currentBettingAmount);
     }
 
-    function loadSliderPosition() {
-        const saved = localStorage.getItem('blackjackSavedSlider');
-        if (saved && !isNaN(parseInt(saved))) {
+    function loadSlider() {
+        const saved = localStorage.getItem('blackjack_saved_bet');
+        if (saved) {
             currentBettingAmount = Math.min(parseInt(saved), chips);
             if (currentBettingAmount < 10) currentBettingAmount = 10;
             betSlider.value = currentBettingAmount;
@@ -327,16 +321,12 @@
             dealerHandEl.innerHTML = dealerHand.map(c => createCardElement(c)).join('');
             dealerScoreDisplay.textContent = calculateScore(dealerHand);
         }
-        doubleBtn.disabled = !(isGameActive && canDoubleDown && chips >= currentBet);
-        doubleBtn.classList.toggle('btn-disabled', doubleBtn.disabled);
-        currentWagerDisplay.textContent = formatCurrency(currentBet);
     }
 
     function updateUI() {
         chipsDisplay.textContent = formatCurrency(chips);
         updateHighScore(); 
         
-        // Update slider constraints
         betSlider.max = Math.max(10, chips);
         if (parseInt(betSlider.value) > chips) {
             betSlider.value = chips;
@@ -349,9 +339,9 @@
         const canRepeat = lastBetAmount >= 10 && lastBetAmount <= chips;
         repeatBetBtn.disabled = !canRepeat;
         repeatBetBtn.classList.toggle('btn-disabled', !canRepeat);
-
-        placeBetBtn.disabled = currentBettingAmount < 10 || chips < 10;
-        placeBetBtn.classList.toggle('btn-disabled', placeBetBtn.disabled);
+        
+        placeBetBtn.disabled = chips < 10;
+        placeBetBtn.classList.toggle('btn-disabled', chips < 10);
     }
 
     function showMessage(msg, isError = false) {
@@ -361,7 +351,7 @@
 
     function resetRound() {
         playerHand = []; dealerHand = []; isGameActive = false; canDoubleDown = false; currentBet = 0;
-        loadSliderPosition(); 
+        loadSlider();
         updateUI();
         renderHands();
         actionControls.style.display = 'none';
@@ -369,11 +359,11 @@
         betDealControls.style.display = 'block';
         placeBetBtn.style.display = 'block';
         bettingControls.style.display = 'flex';
-        showMessage('Adjust your bet and press DEAL.');
+        showMessage('Slide to bet and press DEAL.');
     }
 
     function placeBet() {
-        if (currentBettingAmount > chips) return showMessage("Not enough chips!", true);
+        if (currentBettingAmount > chips) return;
         chips -= currentBettingAmount;
         currentBet = currentBettingAmount;
         lastBetAmount = currentBet;
@@ -381,6 +371,7 @@
         bettingControls.style.display = 'none';
         betDealControls.style.display = 'none';
         actionControls.style.display = 'flex';
+        currentWagerDisplay.textContent = formatCurrency(currentBet);
         updateUI();
         dealInitialCards();
     }
@@ -390,11 +381,7 @@
         playerHand = [dealCard(), dealCard()];
         dealerHand = [dealCard(), dealCard()];
         renderHands();
-        const pS = calculateScore(playerHand), dS = calculateScore(dealerHand);
-        if (pS === 21) {
-            if (dS === 21) { showMessage("Push! Double Blackjack."); endRound(0); }
-            else { showMessage("Blackjack! 3:2 Payout!"); endRound(1.5); }
-        } else if (dS === 21) { showMessage("Dealer Blackjack.", true); endRound(-1); }
+        if (calculateScore(playerHand) === 21) endRound(1.5);
     }
 
     function hit() {
@@ -402,14 +389,6 @@
         playerHand.push(dealCard());
         renderHands();
         if (calculateScore(playerHand) > 21) { showMessage("Bust!", true); endRound(-1); }
-    }
-
-    function doubleDown() {
-        chips -= currentBet; currentBet *= 2; updateUI();
-        playerHand.push(dealCard());
-        renderHands();
-        if (calculateScore(playerHand) > 21) { showMessage("Bust on Double!", true); endRound(-1); }
-        else stand();
     }
 
     function stand() { isGameActive = false; actionControls.style.display = 'none'; dealerPlay(); }
@@ -424,71 +403,47 @@
 
     function determineWinner() {
         const p = calculateScore(playerHand), d = calculateScore(dealerHand);
-        let m = 0, msg = "";
-        if (d > 21) { msg = "Dealer Busts!"; m = 1; }
-        else if (p > d) { msg = "You Win!"; m = 1; }
-        else if (p < d) { msg = "Dealer Wins."; m = -1; }
-        else { msg = "Push."; m = 0; }
-        showMessage(msg, m < 0); endRound(m);
+        let m = 0;
+        if (d > 21 || p > d) m = 1;
+        else if (p < d) m = -1;
+        endRound(m);
     }
 
     function endRound(multiplier) {
         if (multiplier > 0) chips += currentBet + (currentBet * multiplier);
         else if (multiplier === 0) chips += currentBet;
-        currentBet = 0; updateUI();
+        currentBet = 0; 
+        updateUI();
         placeBetBtn.style.display = 'none';
         newGameBtn.style.display = 'block';
-        if (chips < 10) {
-            newGameBtn.textContent = 'RESTART ($2,000)';
-            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 0; resetRound(); };
-        } else {
-            newGameBtn.textContent = 'NEW ROUND';
-            newGameBtn.onclick = resetRound;
-        }
+        newGameBtn.onclick = chips < 10 ? () => { chips = 2000; resetRound(); } : resetRound;
     }
 
-    // --- Listeners ---
+    // EVENT LISTENERS
     betSlider.addEventListener('input', (e) => {
         currentBettingAmount = parseInt(e.target.value);
         currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        saveSliderPosition(currentBettingAmount);
+        saveSlider();
     });
 
     allInBtn.addEventListener('click', () => {
         currentBettingAmount = chips;
         betSlider.value = chips;
         currentBettingDisplay.textContent = formatCurrency(chips);
-        saveSliderPosition(chips);
+        saveSlider();
     });
 
     repeatBetBtn.addEventListener('click', () => {
-        if (lastBetAmount <= chips && lastBetAmount >= 10) {
-            currentBettingAmount = lastBetAmount;
-            betSlider.value = lastBetAmount;
-            currentBettingDisplay.textContent = formatCurrency(lastBetAmount);
-            saveSliderPosition(lastBetAmount);
-        }
+        currentBettingAmount = Math.min(lastBetAmount, chips);
+        betSlider.value = currentBettingAmount;
+        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
+        saveSlider();
     });
 
     placeBetBtn.addEventListener('click', placeBet);
     hitBtn.addEventListener('click', hit);
     standBtn.addEventListener('click', stand);
-    doubleBtn.addEventListener('click', doubleDown);
-
     window.onload = () => { loadHighScore(); resetRound(); };
-
-    // YouTube Logic (Kept as is)
-    document.getElementById('toggle-youtube-btn').onclick = () => {
-        const url = prompt("Enter YouTube URL:");
-        if (url) {
-            const id = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/user\/\S+|\/ytscreeningroom\?v=))([\w\-]{11})/);
-            if (id) {
-                document.getElementById('youtube-player').innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id[1]}?autoplay=1" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                document.getElementById('youtube-container').style.display = 'block';
-            }
-        }
-    };
-    document.getElementById('close-youtube-btn').onclick = () => document.getElementById('youtube-container').style.display = 'none';
 
 </script>
 </body>
