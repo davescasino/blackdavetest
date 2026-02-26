@@ -6,6 +6,7 @@
     <title>Black Dave - Blackjack</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Custom styles for mobile-first, full-screen layout, and aesthetics */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         :root {
@@ -39,6 +40,7 @@
             gap: 0.5rem; 
         }
 
+        /* Card Styling */
         .card {
             width: 45px; 
             height: 70px;
@@ -59,7 +61,11 @@
             flex-shrink: 0;
         }
         .card-red { color: var(--card-red); }
-        .card-back { background: linear-gradient(145deg, #a73737, #d94848); border: 2px solid gold; }
+
+        .card-back {
+            background: linear-gradient(145deg, #a73737, #d94848);
+            border: 2px solid gold;
+        }
 
         .hand-display {
             min-height: 80px;
@@ -71,6 +77,7 @@
             white-space: nowrap; 
         }
 
+        /* Felt table area - Constrained Height */
         .dealer-area, .player-area {
             background-color: var(--felt-green);
             border-radius: 0.5rem;
@@ -82,8 +89,11 @@
             flex-direction: column;
             justify-content: center;
         }
-        .player-area { border: 3px solid #f6e05e; }
+        .player-area {
+            border: 3px solid #f6e05e; 
+        }
 
+        /* General Button Styling - Rounded Rectangles */
         .btn-base {
             @apply font-extrabold py-3 rounded-xl transition duration-200 shadow-xl transform active:scale-95 text-lg;
         }
@@ -103,7 +113,7 @@
             @apply text-3xl font-black text-center text-yellow-300 tracking-wide mb-2;
         }
 
-        /* Slider Styling */
+        /* New Slider Styling */
         input[type=range] {
             -webkit-appearance: none;
             width: 100%;
@@ -111,26 +121,49 @@
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 28px;
-            width: 28px;
+            height: 24px;
+            width: 24px;
             border-radius: 50%;
             background: #f6e05e;
             cursor: pointer;
-            margin-top: -10px;
+            margin-top: -8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%;
-            height: 10px;
+            height: 8px;
             cursor: pointer;
             background: #4a5568;
-            border-radius: 5px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
 
-<a href="https://davescasino.github.io/davescasino" class="fixed top-5 left-5 p-2 bg-gray-800 text-yellow-400 border border-yellow-400 rounded font-bold z-50">⬅ Back to Hub</a>
+<style>
+    .back-hub {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 10px 15px;
+        background: #333;
+        color: #ffd700;
+        text-decoration: none;
+        border-radius: 5px;
+        font-family: sans-serif;
+        font-weight: bold;
+        border: 1px solid #ffd700;
+        z-index: 9999;
+        transition: 0.3s;
+    }
+    .back-hub:hover {
+        background: #ffd700;
+        color: #000;
+        box-shadow: 0 0 10px #ffd700;
+    }
+</style>
+
+<a href="https://davescasino.github.io/davescasino" class="back-hub">⬅ Back to Hub</a>
 
 <div id="game-container">
     <div class="flex flex-col gap-1 flex-shrink-0">
@@ -139,7 +172,7 @@
         <div class="grid grid-cols-3 gap-2 text-xl font-black bg-gray-800 p-2 rounded-lg border border-gray-700">
             <div class="flex flex-col items-start">
                 <span class="text-xs uppercase text-gray-400">CHIPS</span>
-                <span id="chips-display" class="text-green-400">$2,000</span>
+                <span id="chips-display" class="animated-value text-green-400">$2,000</span>
             </div>
             <div class="flex flex-col items-center">
                 <span class="text-xs uppercase text-gray-400">HIGH SCORE</span>
@@ -152,7 +185,7 @@
         </div>
 
         <div id="message-box" class="h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 border-gray-700">
-            Adjust your bet and press DEAL.
+            Place your bet or press DEAL.
         </div>
     </div>
 
@@ -181,26 +214,28 @@
         </div>
     </div>
 
-    <div id="betting-controls" class="flex flex-col gap-4 mt-4">
+    <div id="betting-controls" class="flex flex-col gap-1 mt-3">
         <div id="current-betting-amount-display">
-            BET: <span id="current-betting-display">$10</span>
+            BET: <span id="current-betting-display">$0</span>
         </div>
         
-        <div class="px-4">
+        <div class="px-2 mb-2">
             <input type="range" id="bet-slider" min="10" max="2000" step="10" value="10" class="w-full">
-            <div class="flex justify-between text-xs font-bold text-gray-400 mt-2">
+            <div class="flex justify-between text-xs font-bold text-gray-400 mt-1">
                 <span>$10</span>
                 <span>MAX</span>
             </div>
         </div>
 
-        <button id="all-in-btn" class="btn-base bg-red-700 hover:bg-red-800 text-white w-full py-3">ALL IN</button>
+        <div class="flex justify-center gap-2 mb-2">
+            <button id="all-in-btn" class="btn-base bg-red-700 hover:bg-red-600 text-white w-full">ALL IN</button>
+        </div>
     </div>
 </div>
 
-<div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50" style="display:none;">
+<div id="youtube-container" class="fixed top-1/2 right-5 -translate-y-1/2 w-[400px] h-[250px] bg-black rounded-xl shadow-2xl border-4 border-yellow-400 z-50">
     <div id="youtube-player" class="w-full h-full rounded-lg"></div>
-    <button id="close-youtube-btn" class="absolute -top-3 -right-3 bg-red-600 text-white w-8 h-8 rounded-full font-bold shadow-lg">✕</button>
+    <button id="close-youtube-btn" class="absolute -top-3 -right-3 bg-red-600 hover:bg-red-700 text-white w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold shadow-lg z-51">✕</button>
 </div>
 
 <div id="youtube-input-panel" class="fixed bottom-4 left-4 bg-gray-800 p-3 rounded-lg border-2 border-yellow-400 z-50" style="display: none;">
@@ -208,23 +243,24 @@
     <button id="load-youtube-btn" class="w-full bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-sm font-bold">Load Video</button>
 </div>
 
-<button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
+<button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
 
 <script>
     const SUITS = ['♥', '♦', '♣', '♠'];
     const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
     let chips = 2000;
-    let highScore = 2000;
+    let highScore = 0; 
     let currentBet = 0; 
-    let currentBettingAmount = 10; 
+    let currentBettingAmount = 0; 
+    let lastBetAmount = 0; 
     let deck = [];
     let playerHand = [];
     let dealerHand = [];
     let isGameActive = false;
     let canDoubleDown = false; 
 
-    // UI elements
+    // DOM Elements
     const chipsDisplay = document.getElementById('chips-display');
     const highScoreDisplay = document.getElementById('high-score-display'); 
     const currentWagerDisplay = document.getElementById('current-wager-display'); 
@@ -235,31 +271,38 @@
     const dealerScoreDisplay = document.getElementById('dealer-score-display');
     const playerScoreDisplay = document.getElementById('player-score-display');
     const betSlider = document.getElementById('bet-slider');
+    const allInBtn = document.getElementById('all-in-btn');
     
     const bettingControls = document.getElementById('betting-controls');
     const actionControls = document.getElementById('action-controls');
     const betDealControls = document.getElementById('bet-deal-controls');
+    
     const placeBetBtn = document.getElementById('place-bet-btn');
     const hitBtn = document.getElementById('hit-btn');
     const standBtn = document.getElementById('stand-btn');
     const doubleBtn = document.getElementById('double-btn');
     const newGameBtn = document.getElementById('new-game-btn');
-    const allInBtn = document.getElementById('all-in-btn');
 
     const formatCurrency = (amount) => '$' + amount.toLocaleString('en-US');
 
     function loadHighScore() {
         const storedScore = localStorage.getItem('blackjackHighScore');
-        highScore = (storedScore && !isNaN(parseInt(storedScore))) ? parseInt(storedScore) : 2000;
-        highScoreDisplay.textContent = formatCurrency(highScore);
+        if (storedScore && !isNaN(parseInt(storedScore, 10))) {
+            highScore = parseInt(storedScore, 10);
+        } else {
+            highScore = chips; 
+            localStorage.setItem('blackjackHighScore', chips);
+        }
     }
     
     function updateHighScore() {
         if (chips > highScore) {
             highScore = chips;
-            localStorage.setItem('blackjackHighScore', highScore);
+            localStorage.setItem('blackjackHighScore', chips);
+            highScoreDisplay.textContent = formatCurrency(highScore);
+        } else {
+            highScoreDisplay.textContent = formatCurrency(highScore);
         }
-        highScoreDisplay.textContent = formatCurrency(highScore);
     }
 
     function createDeck() {
@@ -282,12 +325,12 @@
     }
 
     function calculateScore(hand) {
-        let score = 0, aces = 0;
+        let score = 0, aceCount = 0;
         for (const card of hand) {
-            if (card.rank === 'A') { aces++; score += 11; }
+            if (card.rank === 'A') { aceCount++; score += 11; }
             else score += card.value;
         }
-        while (score > 21 && aces > 0) { score -= 10; aces--; }
+        while (score > 21 && aceCount > 0) { score -= 10; aceCount--; }
         return score;
     }
 
@@ -307,6 +350,9 @@
             dealerHandEl.innerHTML = dealerHand.map(c => createCardElement(c)).join('');
             dealerScoreDisplay.textContent = calculateScore(dealerHand);
         }
+        doubleBtn.disabled = !(isGameActive && canDoubleDown && chips >= currentBet);
+        doubleBtn.classList.toggle('btn-disabled', doubleBtn.disabled);
+        currentWagerDisplay.textContent = formatCurrency(currentBet);
     }
 
     function updateUI() {
@@ -318,35 +364,39 @@
             currentBettingAmount = chips;
         }
         currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        placeBetBtn.disabled = chips < 10;
-        placeBetBtn.classList.toggle('btn-disabled', chips < 10);
+        placeBetBtn.disabled = currentBettingAmount < 10;
+        placeBetBtn.classList.toggle('btn-disabled', placeBetBtn.disabled);
     }
 
     function showMessage(msg, isError = false) {
         messageBox.textContent = msg;
-        messageBox.className = `h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 ${isError ? 'bg-red-800 text-white border-red-600' : 'bg-gray-700 text-yellow-300 border-yellow-500'}`;
+        messageBox.className = 'h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2';
+        messageBox.classList.add(isError ? 'bg-red-800' : 'bg-gray-700', isError ? 'text-white' : 'text-yellow-300', isError ? 'border-red-600' : 'border-yellow-500');
     }
 
     function resetRound() {
         playerHand = []; dealerHand = []; isGameActive = false; canDoubleDown = false; currentBet = 0;
+        currentBettingAmount = Math.min(100, chips);
+        if (currentBettingAmount < 10 && chips >= 10) currentBettingAmount = 10;
+        betSlider.value = currentBettingAmount;
         updateUI();
         renderHands();
         actionControls.style.display = 'none';
         newGameBtn.style.display = 'none';
         betDealControls.style.display = 'block';
-        bettingControls.style.display = 'flex';
-        showMessage('Adjust your bet and press DEAL.');
+        placeBetBtn.style.display = 'block';
+        showMessage('Place your bet or press DEAL.');
     }
 
     function placeBet() {
-        if (currentBettingAmount > chips) return;
+        if (currentBettingAmount < 10 || currentBettingAmount > chips) return;
         chips -= currentBettingAmount;
         currentBet = currentBettingAmount;
+        lastBetAmount = currentBettingAmount;
+        currentBettingAmount = 0;
         isGameActive = true; canDoubleDown = true;
-        bettingControls.style.display = 'none';
         betDealControls.style.display = 'none';
         actionControls.style.display = 'flex';
-        currentWagerDisplay.textContent = formatCurrency(currentBet);
         updateUI();
         dealInitialCards();
     }
@@ -363,7 +413,7 @@
         canDoubleDown = false;
         playerHand.push(dealCard());
         renderHands();
-        if (calculateScore(playerHand) > 21) { showMessage("Bust!", true); endRound(-1); }
+        if (calculateScore(playerHand) > 21) endRound(-1);
     }
 
     function stand() { isGameActive = false; actionControls.style.display = 'none'; dealerPlay(); }
@@ -387,13 +437,12 @@
     function endRound(multiplier) {
         if (multiplier > 0) chips += currentBet + (currentBet * multiplier);
         else if (multiplier === 0) chips += currentBet;
-        currentBet = 0; 
-        updateUI();
+        currentBet = 0; updateUI();
+        placeBetBtn.style.display = 'none';
         newGameBtn.style.display = 'block';
         newGameBtn.onclick = chips < 10 ? () => { chips = 2000; resetRound(); } : resetRound;
     }
 
-    // EVENT LISTENERS
     betSlider.addEventListener('input', (e) => {
         currentBettingAmount = parseInt(e.target.value);
         currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
@@ -409,41 +458,42 @@
     hitBtn.addEventListener('click', hit);
     standBtn.addEventListener('click', stand);
     doubleBtn.addEventListener('click', () => {
-        if (chips >= currentBet) {
-            chips -= currentBet; currentBet *= 2; 
-            playerHand.push(dealCard()); stand();
-        }
+        chips -= currentBet; currentBet *= 2; 
+        playerHand.push(dealCard()); stand();
     });
 
-    // YouTube Restoration
+    window.onload = () => { loadHighScore(); resetRound(); loadYouTubeAPI(); };
+
+    // Restore Keyboard Logic
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+            e.preventDefault();
+            if (newGameBtn.style.display === 'block') newGameBtn.click();
+            else if (isGameActive) hit();
+            else placeBet();
+        }
+        if (e.code === 'Enter' && isGameActive) stand();
+    });
+
+    // Restore YouTube logic
     function loadYouTubeAPI() {
         const tag = document.createElement('script');
         tag.src = "https://www.youtube.com/iframe_api";
         document.body.appendChild(tag);
     }
-
-    function getYouTubeVideoID(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
     document.getElementById('toggle-youtube-btn').onclick = () => {
         const panel = document.getElementById('youtube-input-panel');
         panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
     };
-
     document.getElementById('load-youtube-btn').onclick = () => {
-        const videoID = getYouTubeVideoID(document.getElementById('youtube-url-input').value);
-        if (videoID) {
-            document.getElementById('youtube-player').innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${videoID}?autoplay=1" frameborder="0" allowfullscreen></iframe>`;
-            document.getElementById('youtube-container').style.display = 'block';
+        const url = document.getElementById('youtube-url-input').value;
+        const id = url.match(/(?:youtu\.be\/|youtube\.com(?:\/embed\/|\/v\/|\/watch\?v=|\/user\/\S+|\/ytscreeningroom\?v=))([\w\-]{11})/);
+        if (id) {
+            document.getElementById('youtube-player').innerHTML = `<iframe width="100%" height="100%" src="https://www.youtube.com/embed/${id[1]}?autoplay=1" frameborder="0" allowfullscreen></iframe>`;
         }
     };
-
     document.getElementById('close-youtube-btn').onclick = () => document.getElementById('youtube-container').style.display = 'none';
 
-    window.onload = () => { loadHighScore(); loadYouTubeAPI(); resetRound(); };
 </script>
 </body>
 </html>
