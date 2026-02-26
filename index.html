@@ -295,10 +295,10 @@
         <input 
             type="range" 
             id="bet-slider"
-            min="0"
+            min="10"
             max="2000"
             step="10"
-            value="0"
+            value="10"
             class="w-full"
         >
 
@@ -315,17 +315,18 @@
 
 </div>
 
+
 </div>
 
 <script>
     const SUITS = ['♥', '♦', '♣', '♠'];
     const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+    const CHIP_DENOMINATIONS = [500, 100, 50, 10]; 
+
     let chips = 2000;
     let highScore = 0; 
     let currentBet = 0; 
-    let currentBettingAmount = 0;
-        betSlider.value = 0;
-        saveSliderPosition(); 
+    let currentBettingAmount = 0; 
     let lastBetAmount = 0; 
     let deck = [];
     let playerHand = [];
@@ -356,7 +357,9 @@
     const doubleBtn = document.getElementById('double-btn');
     const newGameBtn = document.getElementById('new-game-btn');
     const clearBetBtn = document.getElementById('clear-bet-btn');
-        
+    const repeatBetBtn = document.getElementById('repeat-bet-btn');
+    const betPileEl = document.getElementById('bet-pile');
+
     // --- Utility Functions ---
 
     /** Converts a number to a currency string */
@@ -491,7 +494,24 @@
     }
 
     /** Renders the visual chip stack in the bet pile */
-    
+    function renderBetPile() {
+        betPileEl.innerHTML = '';
+        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
+        repeatAmountDisplay.textContent = lastBetAmount; // Update repeat button with actual amount
+        
+        // Control DEAL and REPEAT button state
+        const isBetValid = currentBettingAmount >= 10;
+        const affordableLastBet = lastBetAmount <= chips;
+
+        // Enable/Disable DEAL button based on current staged bet
+        if (isBetValid) {
+            placeBetBtn.classList.remove('btn-disabled');
+            placeBetBtn.disabled = false;
+        } else {
+            placeBetBtn.classList.add('btn-disabled');
+            placeBetBtn.disabled = true;
+        }
+
         // Enable/Disable REPEAT button
         if (lastBetAmount >= 10 && affordableLastBet) {
             repeatBetBtn.classList.remove('btn-disabled');
@@ -569,11 +589,13 @@
         
         // Always check high score when chips change
         updateHighScore();
-        updateSliderLimits();
-        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount); 
+        if (typeof betSlider !== 'undefined') {
+            updateSliderLimits();
+            currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
+        } 
 
         // Update last bet display and repeat button
-        
+        renderBetPile();
     }
 
     /** Updates the game message box */
@@ -590,7 +612,13 @@
     // --- Betting Functions ---
 
     /** Adds a chip of specific value to the staged bet */
-    
+    function addChipToBet(value) {
+        if (isGameActive) return;
+        if (currentBettingAmount + value > chips) {
+            currentBettingAmount = chips;
+            return showMessage(`Bet capped at your remaining chips: ${formatCurrency(chips)}.`, true);
+        }
+
         currentBettingAmount += value;
         updateUI();
     }
@@ -600,15 +628,22 @@
         if (isGameActive) return;
         currentBettingAmount = 0;
         betSlider.value = 0;
-        saveSliderPosition();
-        betSlider.value = 0;
         currentBettingDisplay.textContent = formatCurrency(0);
         saveSliderPosition();
         showMessage('Bet cleared.');
     }
 
     /** Repeat the last bet amount */
-    
+    function repeatLastBet(showMsg = true) {
+        if (isGameActive) return;
+        
+        const affordableBet = Math.min(lastBetAmount, chips);
+        
+        if (affordableBet < 10) {
+            currentBettingAmount = 0;
+            return showMessage("Not enough chips for the minimum bet ($10).", true);
+        }
+
         currentBettingAmount = affordableBet;
         updateUI();
         if (showMsg) showMessage(`Bet set to previous amount: ${formatCurrency(currentBettingAmount)}.`);
@@ -637,8 +672,6 @@
         } else if (chips < 10) { 
             // If player has less than min bet
             currentBettingAmount = 0;
-        betSlider.value = 0;
-        saveSliderPosition();
         }
 
         updateUI();
@@ -672,9 +705,7 @@
         chips -= betAmount;
         currentBet = betAmount;
         lastBetAmount = betAmount; 
-        currentBettingAmount = 0;
-        betSlider.value = 0;
-        saveSliderPosition(); 
+        currentBettingAmount = 0; 
         isGameActive = true;
         canDoubleDown = true; 
         updateUI();
@@ -833,7 +864,8 @@
             placeBetBtn.style.display = 'none';
             newGameBtn.style.display = 'block';
             // Reset chips to $2000 on restart
-            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 0; resetRound(); };
+            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 0; loadSliderPosition();
+        resetRound(); };
         } else {
             newGameBtn.textContent = 'NEW ROUND';
             placeBetBtn.style.display = 'none';
@@ -843,7 +875,8 @@
     }
 
     
-    // --- Slider System ---
+
+    // --- SLIDER BET SYSTEM ---
     const betSlider = document.getElementById('bet-slider');
     const allInBtn = document.getElementById('all-in-btn');
 
@@ -861,8 +894,13 @@
     function loadSliderPosition() {
         const saved = localStorage.getItem('blackjackSliderValue');
         if (saved !== null) {
-            betSlider.value = saved;
-            currentBettingAmount = Math.min(parseInt(saved), chips);
+            let val = parseInt(saved);
+            if (isNaN(val) || val < 10) val = 10;
+            betSlider.value = Math.min(val, chips);
+            currentBettingAmount = Math.min(val, chips);
+        } else {
+            betSlider.value = Math.min(10, chips);
+            currentBettingAmount = Math.min(10, chips);
         }
     }
 
@@ -890,13 +928,15 @@
         
         // 2. Set up event listeners
         clearBetBtn.addEventListener('click', clearBet);
-                placeBetBtn.addEventListener('click', placeBet);
+        
+        placeBetBtn.addEventListener('click', placeBet);
         hitBtn.addEventListener('click', hit);
         standBtn.addEventListener('click', stand);
         doubleBtn.addEventListener('click', doubleDown); 
         
         // 3. Final setup
         updateUI(); // Renders initial chips, high score, and betting buttons
+        loadSliderPosition();
         resetRound();
     };
     // --- Keyboard Controls ---
