@@ -39,7 +39,7 @@
             gap: 0.5rem; 
         }
 
-        /* Card Styling */
+        /* Card Styling - Fixed Scroll Issue */
         .card {
             width: 45px; 
             height: 70px;
@@ -67,8 +67,7 @@
             justify-content: center;
             align-items: center;
             padding: 5px 0;
-            overflow-x: auto; 
-            white-space: nowrap; 
+            /* Removed overflow and nowrap to stop scrolling */
         }
 
         .dealer-area, .player-area {
@@ -83,36 +82,6 @@
             justify-content: center;
         }
         .player-area { border: 3px solid #f6e05e; }
-
-        /* Visual Bet Pile */
-        #bet-pile {
-            min-height: 40px; 
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 0.5rem;
-            border: 1px dashed #555;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            position: relative;
-            padding-top: 5px;
-        }
-
-        .bet-chip {
-            width: 25px; 
-            height: 25px;
-            border-radius: 50%;
-            position: absolute;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-            line-height: 25px;
-            font-size: 0.6rem;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-        }
-        .chip-10 { background-color: #0080ff; }
-        .chip-50 { background-color: #ffb800; color: black; }
-        .chip-100 { background-color: #e53e3e; }
-        .chip-500 { background-color: #000000; border: 1px solid gold; }
 
         /* Slider Styling */
         input[type=range] {
@@ -181,8 +150,9 @@
 
     <div id="betting-controls" class="flex flex-col gap-1 mt-3">
         <div id="current-betting-amount-display">BET: <span id="current-betting-display">$10</span></div>
-        <div id="bet-pile" class="mb-2"></div>
-        <div class="px-4 mb-2"><input type="range" id="bet-slider" min="10" max="2000" step="10" value="10"></div>
+        <div class="px-4 mb-4 mt-2">
+            <input type="range" id="bet-slider" min="10" max="2000" step="10" value="10">
+        </div>
         <div class="flex justify-center gap-2">
             <button id="all-in-btn" class="btn-base bg-red-700 hover:bg-red-600 text-white w-2/5">ALL IN</button>
             <button id="min-bet-btn" class="btn-base bg-gray-600 hover:bg-gray-500 text-white w-2/5">MIN ($10)</button>
@@ -197,7 +167,7 @@
 <button id="toggle-youtube-btn" class="fixed top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-lg font-bold z-40">📺 YouTube</button>
 
 <script>
-    const SUITS = ['♥', '♦', '♣', '♠'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'], CHIP_DENOMINATIONS = [500, 100, 50, 10];
+    const SUITS = ['♥', '♦', '♣', '♠'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let chips = 2000, highScore = 0, currentBet = 0, currentBettingAmount = 10, lastBetAmount = 10;
     let deck = [], playerHand = [], dealerHand = [], isGameActive = false, canDoubleDown = false;
 
@@ -205,11 +175,21 @@
     const currentWagerDisplay = document.getElementById('current-wager-display'), currentBettingDisplay = document.getElementById('current-betting-display');
     const dealerHandEl = document.getElementById('dealer-hand'), playerHandEl = document.getElementById('player-hand');
     const dealerScoreDisplay = document.getElementById('dealer-score-display'), playerScoreDisplay = document.getElementById('player-score-display');
-    const betSlider = document.getElementById('bet-slider'), betPileEl = document.getElementById('bet-pile');
+    const betSlider = document.getElementById('bet-slider');
     const actionControls = document.getElementById('action-controls'), betDealControls = document.getElementById('bet-deal-controls');
     const placeBetBtn = document.getElementById('place-bet-btn'), newGameBtn = document.getElementById('new-game-btn'), bettingControls = document.getElementById('betting-controls');
 
     const formatCurrency = (amount) => '$' + amount.toLocaleString('en-US');
+
+    // Load High Score
+    function loadHS() {
+        const s = localStorage.getItem('blackjackHighScore');
+        highScore = (s && !isNaN(parseInt(s))) ? parseInt(s) : chips;
+        highScoreDisplay.textContent = formatCurrency(highScore);
+    }
+    function updateHS() {
+        if (chips > highScore) { highScore = chips; localStorage.setItem('blackjackHighScore', chips); highScoreDisplay.textContent = formatCurrency(highScore); }
+    }
 
     function createDeck() {
         deck = [];
@@ -243,23 +223,10 @@
         currentWagerDisplay.textContent = formatCurrency(currentBet);
     }
 
-    function renderBetPile() {
-        betPileEl.innerHTML = '';
-        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
-        let temp = currentBettingAmount;
-        let stack = [];
-        for (const v of CHIP_DENOMINATIONS) { while (temp >= v) { stack.push(v); temp -= v; } }
-        stack.reverse().slice(0, 8).forEach((v, i) => {
-            const el = document.createElement('div'); el.className = `bet-chip chip-${v}`; el.textContent = v;
-            el.style.bottom = `${(i * 3) + 3}px`; el.style.left = '50%'; el.style.transform = 'translateX(-50%)';
-            betPileEl.appendChild(el);
-        });
-    }
-
     function updateBettingUI() {
         betSlider.max = chips;
         currentBettingAmount = parseInt(betSlider.value);
-        renderBetPile();
+        currentBettingDisplay.textContent = formatCurrency(currentBettingAmount);
     }
 
     function showMessage(msg, isError = false) {
@@ -284,16 +251,28 @@
         actionControls.style.display = 'flex';
         createDeck(); playerHand = [dealCard(), dealCard()]; dealerHand = [dealCard(), dealCard()];
         renderHands();
-        if (calculateScore(playerHand) === 21) endRound(calculateScore(dealerHand) === 21 ? 0 : 1.5);
+        if (calculateScore(playerHand) === 21) {
+             if (calculateScore(dealerHand) === 21) { showMessage("Push!"); endRound(0); }
+             else { showMessage("Blackjack!"); endRound(1.5); }
+        }
     }
 
     function endRound(mult) {
         if (mult > 0) chips += currentBet + (currentBet * mult); else if (mult === 0) chips += currentBet;
+        updateHS();
         chipsDisplay.textContent = formatCurrency(chips);
-        actionControls.style.display = 'none'; betDealControls.style.display = 'block';
-        placeBetBtn.style.display = 'none'; newGameBtn.style.display = 'block';
-        newGameBtn.onclick = chips < 10 ? () => { chips = 2000; resetRound(); } : resetRound;
-        if (chips < 10) { showMessage("GAME OVER", true); newGameBtn.textContent = 'RESTART ($2,000)'; }
+        actionControls.style.display = 'none';
+        betDealControls.style.display = 'block';
+        placeBetBtn.style.display = 'none';
+        newGameBtn.style.display = 'block';
+        if (chips < 10) {
+            showMessage("GAME OVER", true);
+            newGameBtn.textContent = 'RESTART ($2,000)';
+            newGameBtn.onclick = () => { chips = 2000; lastBetAmount = 10; resetRound(); };
+        } else {
+            newGameBtn.textContent = 'NEW ROUND';
+            newGameBtn.onclick = resetRound;
+        }
     }
 
     function stand() { isGameActive = false; actionControls.style.display = 'none'; dealerPlay(); }
@@ -311,14 +290,16 @@
         else { showMessage("Push!"); endRound(0); }
     }
 
+    // Input Listeners
     betSlider.addEventListener('input', updateBettingUI);
     document.getElementById('all-in-btn').addEventListener('click', () => { betSlider.value = chips; updateBettingUI(); });
     document.getElementById('min-bet-btn').addEventListener('click', () => { betSlider.value = 10; updateBettingUI(); });
     placeBetBtn.addEventListener('click', placeBet);
-    document.getElementById('hit-btn').addEventListener('click', () => { playerHand.push(dealCard()); canDoubleDown = false; renderHands(); if (calculateScore(playerHand) > 21) endRound(-1); });
+    document.getElementById('hit-btn').addEventListener('click', () => { playerHand.push(dealCard()); canDoubleDown = false; renderHands(); if (calculateScore(playerHand) > 21) { showMessage("Bust!", true); endRound(-1); } });
     document.getElementById('stand-btn').addEventListener('click', stand);
-    document.getElementById('double-btn').addEventListener('click', () => { chips -= currentBet; currentBet *= 2; playerHand.push(dealCard()); if (calculateScore(playerHand) > 21) endRound(-1); else stand(); });
-    window.onload = resetRound;
+    document.getElementById('double-btn').addEventListener('click', () => { chips -= currentBet; currentBet *= 2; playerHand.push(dealCard()); if (calculateScore(playerHand) > 21) { showMessage("Bust!", true); endRound(-1); } else stand(); });
+
+    window.onload = () => { loadHS(); resetRound(); };
 </script>
 </body>
 </html>
