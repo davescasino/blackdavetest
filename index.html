@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Black Dave - Animated Edition</title>
+    <title>Black Dave - The Original Black Jack</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -36,7 +36,6 @@
         .suit-center { font-size: 1.4rem; text-align: center; width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
         .rank-bottom { font-size: 0.75rem; text-align: center; width: 100%; line-height: 1; margin-bottom: 2px; transform: rotate(180deg); }
 
-        /* Fly-in Animation */
         @keyframes dealCard {
             from { transform: translateY(-300px) rotate(25deg); opacity: 0; }
             to { transform: translateY(0) rotate(0deg); opacity: 1; }
@@ -117,6 +116,7 @@
 <script>
     const SUITS = ['♥', '♦', '♣', '♠'], RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
     let chips = 2000, highScore = 2000, currentBet = 0, isGameActive = false, isDealerTurn = false;
+    let isAnimating = false; // LOCK VARIABLE
     let deck = [], playerHand = [], dealerHand = [];
 
     const elements = {
@@ -142,7 +142,6 @@
 
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-    // Updated Card Creator
     function createCardElement(card, isFlipped = true, isNew = false) {
         const slot = document.createElement('div');
         slot.className = `card-slot ${isFlipped ? 'flipped' : ''} ${isNew ? 'new-card' : ''}`;
@@ -158,8 +157,8 @@
         return slot;
     }
 
-    // New Helper to add cards one at a time
     async function addCardToDisplay(target, hand, cardIndex, reveal = true) {
+        isAnimating = true; // LOCK ON
         const container = target === 'player' ? elements.pHand : elements.dHand;
         const card = hand[cardIndex];
         const el = createCardElement(card, reveal, true);
@@ -170,6 +169,7 @@
         
         await sleep(400); 
         el.classList.remove('new-card'); 
+        isAnimating = false; // LOCK OFF
     }
 
     const format = (v) => '$' + Math.floor(v).toLocaleString();
@@ -222,7 +222,7 @@
     }
 
     async function placeBet() {
-        if (isGameActive || isDealerTurn) return;
+        if (isGameActive || isDealerTurn || isAnimating) return; // CHECK LOCK
         const amt = calculateSliderBet();
         if (amt < 10 && chips >= 10) return;
         
@@ -237,38 +237,39 @@
         playerHand = []; dealerHand = [];
         elements.pHand.innerHTML = ''; elements.dHand.innerHTML = '';
 
-        // Animated Dealing Round
-        playerHand.push(deck.pop()); await addCardToDisplay('player', playerHand, 0);
-        dealerHand.push(deck.pop()); await addCardToDisplay('dealer', dealerHand, 0);
-        playerHand.push(deck.pop()); await addCardToDisplay('player', playerHand, 1);
-        dealerHand.push(deck.pop()); 
-        elements.dHand.appendChild(createCardElement(dealerHand[1], false, true)); 
-        await sleep(400);
+        await addCardToDisplay('player', playerHand.push(deck.pop()) && playerHand, 0);
+        await addCardToDisplay('dealer', dealerHand.push(deck.pop()) && dealerHand, 0);
+        await addCardToDisplay('player', playerHand.push(deck.pop()) && playerHand, 1);
+        
+        dealerHand.push(deck.pop());
+        const d2 = createCardElement(dealerHand[1], false, true);
+        elements.dHand.appendChild(d2);
+        isAnimating = true; await sleep(400); isAnimating = false;
 
         elements.actionRow.style.display = 'flex';
         if (score(playerHand) === 21) end(1.5, "BLACKJACK!");
         else if (score(dealerHand) === 21) {
-            elements.dHand.children[1].classList.add('flipped');
+            d2.classList.add('flipped');
             end(-1, "Dealer Blackjack.");
         }
     }
 
     async function hit() { 
-        if(!isGameActive || isDealerTurn) return; 
+        if(!isGameActive || isDealerTurn || isAnimating) return; // CHECK LOCK
         playerHand.push(deck.pop()); 
         await addCardToDisplay('player', playerHand, playerHand.length - 1);
         if(score(playerHand) > 21) end(-1, "Bust!"); 
     }
 
     function stand() { 
-        if(!isGameActive || isDealerTurn) return; 
+        if(!isGameActive || isDealerTurn || isAnimating) return; // CHECK LOCK
         isGameActive = false; isDealerTurn = true;
         elements.actionRow.style.display = 'none'; 
         dealerPlay(); 
     }
 
     async function double() { 
-        if(!isGameActive || isDealerTurn || chips < currentBet) return; 
+        if(!isGameActive || isDealerTurn || isAnimating || chips < currentBet) return; // CHECK LOCK
         chips -= currentBet; currentBet *= 2; 
         updateUI(); 
         playerHand.push(deck.pop()); 
@@ -279,8 +280,9 @@
     async function dealerPlay() {
         const holeCard = elements.dHand.children[1];
         holeCard.classList.add('flipped');
+        isAnimating = true; await sleep(600); isAnimating = false;
         elements.dScore.textContent = score(dealerHand);
-        await sleep(800);
+        await sleep(200);
 
         while (score(dealerHand) < 17) {
             dealerHand.push(deck.pop());
@@ -313,7 +315,7 @@
     }
 
     function resetRound() {
-        isGameActive = false; isDealerTurn = false;
+        isGameActive = false; isDealerTurn = false; isAnimating = false;
         playerHand = []; dealerHand = [];
         elements.pHand.innerHTML = ''; elements.dHand.innerHTML = '';
         elements.pScore.textContent = '0'; elements.dScore.textContent = '?';
@@ -328,10 +330,9 @@
         elements.msg.textContent = "Adjust bet & press SPACE.";
     }
 
-    // Updated Controls with repeat prevention
     document.addEventListener('keydown', (e) => {
         if (document.activeElement.tagName === 'INPUT') return;
-        if (e.repeat) return; // FIX: Prevent glitching if key is held down
+        if (e.repeat || isAnimating) return; // REPEAT & ANIMATION GUARD
         
         if (e.code === 'Space') {
             e.preventDefault();
@@ -349,7 +350,6 @@
     elements.standBtn.onclick = stand;
     elements.doubleBtn.onclick = double;
 
-    // YouTube Controller (Original logic)
     document.getElementById('toggle-youtube-btn').onclick = () => {
         const p = document.getElementById('youtube-input-panel');
         p.style.display = p.style.display === 'none' ? 'block' : 'none';
