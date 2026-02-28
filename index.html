@@ -11,22 +11,41 @@
         body { font-family: 'Inter', sans-serif; background-color: var(--dark-bg); color: #e2e8f0; display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw; padding: 0; margin: 0; overflow: hidden; }
         #game-container { width: 100%; height: 100%; max-width: 500px; background-color: #2d3748; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
         
-        /* Fixed Card Styling - Removed scrolling */
-        .card { width: 45px; height: 70px; background-color: white; border-radius: 0.4rem; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 5px; font-weight: 800; font-size: 1rem; margin: 0 3px; color: black; user-select: none; flex-shrink: 0; }
+        /* Fixed Card Styling - Improved fit for bottom numbers */
+        .card { 
+            width: 48px; 
+            height: 72px; 
+            background-color: white; 
+            border-radius: 0.4rem; 
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3); 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between; 
+            padding: 3px 5px; 
+            font-weight: 800; 
+            color: black; 
+            user-select: none; 
+            flex-shrink: 0; 
+            line-height: 1;
+        }
         .card-red { color: var(--card-red); }
         .card-back { background: linear-gradient(145deg, #a73737, #d94848); border: 2px solid gold; }
+        .rank-top { font-size: 0.85rem; text-align: left; }
+        .suit-center { font-size: 1.5rem; text-align: center; align-self: center; }
+        .rank-bottom { font-size: 0.85rem; text-align: right; transform: rotate(180deg); }
         
-        /* Prevent Card Scrolling */
-        .hand-display { min-height: 80px; display: flex; justify-content: center; align-items: center; padding: 5px 0; overflow: hidden; }
+        .hand-display { min-height: 85px; display: flex; justify-content: center; align-items: center; padding: 5px 0; overflow: hidden; }
         
-        .dealer-area, .player-area { background-color: var(--felt-green); border-radius: 0.5rem; padding: 0.5rem; border: 1px solid #528c5e; height: 120px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }
+        .dealer-area, .player-area { background-color: var(--felt-green); border-radius: 0.5rem; padding: 0.5rem; border: 1px solid #528c5e; height: 125px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }
         .player-area { border: 3px solid #f6e05e; }
+        
         .btn-base { @apply font-extrabold py-3 rounded-xl transition duration-200 shadow-xl transform active:scale-95 text-lg; }
         .btn-action { @apply btn-base bg-indigo-600 hover:bg-indigo-700 text-white; }
         .action-button-large { height: 75px; @apply text-xl; }
+        
         #current-betting-amount-display { @apply text-3xl font-black text-center text-yellow-300 tracking-wide mb-2; }
         
-        input[type=range] { width: 100%; cursor: pointer; accent-color: #fbbf24; height: 12px; border-radius: 6px; }
+        input[type=range] { width: 100%; cursor: pointer; accent-color: #fbbf24; height: 12px; border-radius: 6px; outline: none; }
         .back-hub { position: absolute; top: 20px; left: 20px; padding: 10px 15px; background: #333; color: #ffd700; text-decoration: none; border-radius: 5px; font-weight: bold; border: 1px solid #ffd700; z-index: 9999; }
     </style>
 </head>
@@ -42,7 +61,7 @@
             <div class="flex flex-col items-center"><span class="text-xs uppercase text-gray-400">HIGH SCORE</span><span id="high-score-display" class="text-yellow-400">$2,000</span></div>
             <div class="flex flex-col items-end"><span class="text-xs uppercase text-gray-400">WAGER</span><span id="current-wager-display" class="text-yellow-300">$0</span></div>
         </div>
-        <div id="message-box" class="h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 border-gray-700">Place bet and press DEAL.</div>
+        <div id="message-box" class="h-8 text-center text-sm font-extrabold rounded-lg flex items-center justify-center border-2 border-gray-700">Set bet & press SPACE to deal.</div>
     </div>
 
     <div class="flex-shrink-0 flex flex-col gap-1">
@@ -107,11 +126,9 @@
 
     const format = (v) => '$' + Math.floor(v).toLocaleString();
 
-    // Logic to keep slider POSITION same, not dollar amount
     function calculateSliderBet() {
         const percent = elements.slider.value / 100;
         let amount = Math.floor(chips * percent);
-        // Ensure $10 increments and min bet
         amount = Math.max(10, Math.floor(amount / 10) * 10);
         if (amount > chips) amount = Math.max(0, Math.floor(chips / 10) * 10);
         return amount;
@@ -123,14 +140,62 @@
         elements.dealBtn.textContent = `DEAL (${format(amt)})`;
     }
 
-    elements.slider.oninput = updateSliderUI;
-    document.getElementById('all-in-btn').onclick = () => { elements.slider.value = 100; updateSliderUI(); };
+    // FIX: Blur slider on input so it doesn't steal keyboard focus
+    elements.slider.oninput = () => {
+        updateSliderUI();
+    };
+    elements.slider.onchange = () => {
+        elements.slider.blur(); // Forces focus back to the window for Space/Enter
+    };
+
+    document.getElementById('all-in-btn').onclick = () => { 
+        elements.slider.value = 100; 
+        updateSliderUI(); 
+        document.activeElement.blur(); 
+    };
 
     function updateUI() {
         elements.chips.textContent = format(chips);
         if (chips > highScore) { highScore = chips; localStorage.setItem('blackjackHighScore', chips); }
         elements.highScore.textContent = format(highScore);
         updateSliderUI();
+    }
+
+    function createDeck() {
+        deck = [];
+        for (const suit of SUITS) {
+            for (const rank of RANKS) {
+                let v = isNaN(rank) ? (rank === 'A' ? 11 : 10) : parseInt(rank);
+                deck.push({ rank, suit, value: v });
+            }
+        }
+        deck.sort(() => Math.random() - 0.5);
+    }
+
+    function score(h) {
+        let s = h.reduce((a, c) => a + c.value, 0), aces = h.filter(c => c.rank==='A').length;
+        while (s > 21 && aces > 0) { s -= 10; aces--; }
+        return s;
+    }
+
+    function render(show = false) {
+        const cardHTML = (c) => `
+            <div class="card ${c.suit==='♥'||c.suit==='♦'?'card-red':''}">
+                <div class="rank-top">${c.rank}</div>
+                <div class="suit-center">${c.suit}</div>
+                <div class="rank-bottom">${c.rank}</div>
+            </div>`;
+        
+        elements.pHand.innerHTML = playerHand.map(cardHTML).join('');
+        elements.pScore.textContent = score(playerHand);
+        
+        if (isGameActive && !show) {
+            elements.dHand.innerHTML = cardHTML(dealerHand[0]) + `<div class="card card-back"></div>`;
+            elements.dScore.textContent = dealerHand[0].value;
+        } else {
+            elements.dHand.innerHTML = dealerHand.map(cardHTML).join('');
+            elements.dScore.textContent = score(dealerHand);
+        }
     }
 
     function resetRound() {
@@ -145,7 +210,7 @@
         elements.wager.textContent = format(0);
         updateUI();
         render();
-        elements.msg.textContent = "Slider position saved. Press DEAL.";
+        elements.msg.textContent = "Adjust bet & press SPACE.";
     }
 
     function placeBet() {
@@ -158,40 +223,37 @@
         elements.actionRow.style.display = 'flex';
         elements.wager.textContent = format(currentBet);
         elements.chips.textContent = format(chips);
-        start();
-    }
-
-    function start() {
-        deck = []; for(const s of SUITS) for(const r of RANKS) deck.push({r, s, v: isNaN(r)?(r==='A'?11:10):parseInt(r)});
-        deck.sort(() => Math.random() - 0.5);
-        playerHand = [deck.pop(), deck.pop()]; dealerHand = [deck.pop(), deck.pop()];
+        createDeck();
+        playerHand = [deck.pop(), deck.pop()];
+        dealerHand = [deck.pop(), deck.pop()];
         render();
         if (score(playerHand) === 21) end(1.5, "BLACKJACK!");
         else if (score(dealerHand) === 21) end(-1, "Dealer Blackjack.");
     }
 
-    function score(h) {
-        let s = h.reduce((a, c) => a + c.v, 0), aces = h.filter(c => c.r==='A').length;
-        while (s > 21 && aces > 0) { s -= 10; aces--; }
-        return s;
+    function hit() { 
+        if(!isGameActive) return; 
+        playerHand.push(deck.pop()); 
+        render(); 
+        if(score(playerHand) > 21) end(-1, "Bust!"); 
     }
 
-    function render(show = false) {
-        const c = (card) => `<div class="card ${card.s==='♥'||card.s==='♦'?'card-red':''}"><span>${card.r}</span><span class="text-2xl">${card.s}</span><span class="rotate-180">${card.r}</span></div>`;
-        elements.pHand.innerHTML = playerHand.map(c).join('');
-        elements.pScore.textContent = score(playerHand);
-        if (isGameActive && !show) {
-            elements.dHand.innerHTML = c(dealerHand[0]) + `<div class="card card-back"></div>`;
-            elements.dScore.textContent = dealerHand[0].v;
-        } else {
-            elements.dHand.innerHTML = dealerHand.map(c).join('');
-            elements.dScore.textContent = score(dealerHand);
-        }
+    function stand() { 
+        if(!isGameActive) return; 
+        isGameActive = false; 
+        elements.actionRow.style.display = 'none'; 
+        dealerPlay(); 
     }
 
-    function hit() { if(!isGameActive) return; playerHand.push(deck.pop()); render(); if(score(playerHand) > 21) end(-1, "Bust!"); }
-    function stand() { if(!isGameActive) return; isGameActive = false; elements.actionRow.style.display = 'none'; dealerPlay(); }
-    function double() { if(!isGameActive || chips < currentBet) return; chips -= currentBet; currentBet *= 2; updateUI(); playerHand.push(deck.pop()); render(); if(score(playerHand) > 21) end(-1, "Bust!"); else stand(); }
+    function double() { 
+        if(!isGameActive || chips < currentBet) return; 
+        chips -= currentBet; 
+        currentBet *= 2; 
+        updateUI(); 
+        playerHand.push(deck.pop()); 
+        render(); 
+        if(score(playerHand) > 21) end(-1, "Bust!"); else stand(); 
+    }
 
     function dealerPlay() {
         render(true);
@@ -216,13 +278,17 @@
         elements.betRow.style.display = 'block';
         elements.dealBtn.style.display = 'none';
         elements.newRoundBtn.style.display = 'block';
-        if (chips < 10) { elements.newRoundBtn.textContent = 'RESTART ($2,000)'; elements.newRoundBtn.onclick = () => { chips = 2000; resetRound(); }; }
-        else { elements.newRoundBtn.textContent = 'NEW ROUND'; elements.newRoundBtn.onclick = resetRound; }
+        if (chips < 10) { 
+            elements.newRoundBtn.textContent = 'RESTART ($2,000)'; 
+            elements.newRoundBtn.onclick = () => { chips = 2000; resetRound(); }; 
+        } else { 
+            elements.newRoundBtn.textContent = 'NEW ROUND'; 
+            elements.newRoundBtn.onclick = resetRound; 
+        }
     }
 
-    // Keyboard Shortcuts restored from original Blackdave.html logic
+    // Keyboard Control
     document.addEventListener('keydown', (e) => {
-        if (document.activeElement.tagName === 'INPUT') return;
         if (e.code === 'Space') {
             e.preventDefault();
             if (elements.newRoundBtn.style.display === 'block') elements.newRoundBtn.click();
