@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Black Dave - The Original Black Jack</title>
+    <title>Black Dave - Fixed Animations</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
@@ -12,8 +12,8 @@
         
         #game-container { width: 100%; height: 100%; max-width: 500px; background-color: #2d3748; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; position: relative; }
         
-        /* 3D Card Animation Styles */
-        .card-slot { width: 48px; height: 72px; perspective: 1000px; display: inline-block; margin: 0 2px; }
+        /* Fixed Card Styling - Ensured ranks stay inside */
+        .card-slot { width: 48px; height: 72px; perspective: 1000px; display: inline-block; margin: 0 2px; vertical-align: middle; }
         .card-inner { 
             position: relative; width: 100%; height: 100%; 
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
@@ -24,26 +24,26 @@
         .card-front, .card-back { 
             position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
             border-radius: 0.4rem; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-            display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0; font-weight: 800;
+            display: flex; flex-direction: column; justify-content: space-between; 
+            padding: 2px 0; font-weight: 800; overflow: hidden; /* Prevents rank overflow */
         }
         
         .card-front { background: white; color: black; transform: rotateY(180deg); }
         .card-back { background: linear-gradient(145deg, #a73737, #d94848); border: 2px solid gold; transform: rotateY(0deg); }
         
         .card-red { color: var(--card-red); }
-        .rank-top { font-size: 0.8rem; text-align: center; width: 100%; }
-        .suit-center { font-size: 1.5rem; text-align: center; width: 100%; }
-        .rank-bottom { font-size: 0.8rem; text-align: center; width: 100%; transform: rotate(180deg); }
+        .rank-top { font-size: 0.75rem; text-align: center; width: 100%; line-height: 1; margin-top: 2px; }
+        .suit-center { font-size: 1.4rem; text-align: center; width: 100%; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
+        .rank-bottom { font-size: 0.75rem; text-align: center; width: 100%; line-height: 1; margin-bottom: 2px; transform: rotate(180deg); }
 
-        /* Fly-in Animation */
+        /* Fly-in Animation - Now only triggers on elements with .new-card class */
         @keyframes dealCard {
-            from { transform: translateY(-300px) rotate(45deg); opacity: 0; }
+            from { transform: translateY(-300px) rotate(25deg); opacity: 0; }
             to { transform: translateY(0) rotate(0deg); opacity: 1; }
         }
-        .animate-deal { animation: dealCard 0.4s ease-out forwards; }
+        .new-card { animation: dealCard 0.4s ease-out forwards; }
         
-        /* Layout */
-        .hand-display { min-height: 85px; display: flex; justify-content: center; align-items: center; padding: 5px 0; overflow: hidden; }
+        .hand-display { min-height: 85px; display: flex; justify-content: center; align-items: center; padding: 5px 0; }
         .dealer-area, .player-area { background-color: var(--felt-green); border-radius: 0.5rem; padding: 0.5rem; border: 1px solid #528c5e; height: 125px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }
         .player-area { border: 3px solid #f6e05e; }
         
@@ -142,9 +142,10 @@
 
     const sleep = (ms) => new Promise(res => setTimeout(res, ms));
 
-    function createCardElement(card, isFlipped = true) {
+    function createCardElement(card, isFlipped = true, isNew = false) {
         const slot = document.createElement('div');
-        slot.className = `card-slot animate-deal ${isFlipped ? 'flipped' : ''}`;
+        // Animation class is only added if isNew is true
+        slot.className = `card-slot ${isFlipped ? 'flipped' : ''} ${isNew ? 'new-card' : ''}`;
         slot.innerHTML = `
             <div class="card-inner">
                 <div class="card-back"></div>
@@ -157,19 +158,19 @@
         return slot;
     }
 
-    async function updateDisplay(revealDealer = false) {
-        elements.pHand.innerHTML = '';
-        for (let card of playerHand) {
-            elements.pHand.appendChild(createCardElement(card, true));
-        }
-        elements.pScore.textContent = score(playerHand);
-
-        elements.dHand.innerHTML = '';
-        dealerHand.forEach((card, i) => {
-            const shouldShow = revealDealer || i === 0;
-            elements.dHand.appendChild(createCardElement(card, shouldShow));
-        });
-        elements.dScore.textContent = revealDealer ? score(dealerHand) : (dealerHand[0]?.value || 0);
+    // Fixed Render Logic: Instead of clearing everything, we only add what's missing
+    async function addCardToDisplay(target, hand, cardIndex, reveal = true) {
+        const container = target === 'player' ? elements.pHand : elements.dHand;
+        const card = hand[cardIndex];
+        const el = createCardElement(card, reveal, true);
+        container.appendChild(el);
+        
+        // Update scores after the card is added
+        if (target === 'player') elements.pScore.textContent = score(playerHand);
+        else elements.dScore.textContent = (isDealerTurn || reveal) ? score(dealerHand) : dealerHand[0].value;
+        
+        await sleep(400); // Wait for animation to finish
+        el.classList.remove('new-card'); // Animation won't play again if UI re-renders
     }
 
     const format = (v) => '$' + Math.floor(v).toLocaleString();
@@ -233,22 +234,31 @@
         
         createDeck();
         playerHand = []; dealerHand = [];
+        elements.pHand.innerHTML = ''; elements.dHand.innerHTML = '';
+
+        // Dealing Round 1
+        playerHand.push(deck.pop()); await addCardToDisplay('player', playerHand, 0);
+        dealerHand.push(deck.pop()); await addCardToDisplay('dealer', dealerHand, 0);
         
-        // Sequential Dealing
-        playerHand.push(deck.pop()); await updateDisplay(); await sleep(300);
-        dealerHand.push(deck.pop()); await updateDisplay(); await sleep(300);
-        playerHand.push(deck.pop()); await updateDisplay(); await sleep(300);
-        dealerHand.push(deck.pop()); await updateDisplay();
+        // Dealing Round 2 (Dealer second card stays face down)
+        playerHand.push(deck.pop()); await addCardToDisplay('player', playerHand, 1);
+        dealerHand.push(deck.pop()); 
+        elements.dHand.appendChild(createCardElement(dealerHand[1], false, true)); 
+        await sleep(400);
 
         elements.actionRow.style.display = 'flex';
         if (score(playerHand) === 21) end(1.5, "BLACKJACK!");
-        else if (score(dealerHand) === 21) end(-1, "Dealer Blackjack.");
+        else if (score(dealerHand) === 21) {
+            // Instant reveal if dealer has Blackjack
+            elements.dHand.children[1].classList.add('flipped');
+            end(-1, "Dealer Blackjack.");
+        }
     }
 
     async function hit() { 
         if(!isGameActive || isDealerTurn) return; 
         playerHand.push(deck.pop()); 
-        await updateDisplay();
+        await addCardToDisplay('player', playerHand, playerHand.length - 1);
         if(score(playerHand) > 21) end(-1, "Bust!"); 
     }
 
@@ -261,22 +271,25 @@
 
     async function double() { 
         if(!isGameActive || isDealerTurn || chips < currentBet) return; 
-        chips -= currentBet; 
-        currentBet *= 2; 
+        chips -= currentBet; currentBet *= 2; 
         updateUI(); 
         playerHand.push(deck.pop()); 
-        await updateDisplay();
+        await addCardToDisplay('player', playerHand, playerHand.length - 1);
         if(score(playerHand) > 21) end(-1, "Bust!"); else stand(); 
     }
 
     async function dealerPlay() {
-        await updateDisplay(true); // Reveal the hidden card with 3D flip
-        await sleep(600);
+        // Flip the second card (the hole card)
+        const holeCard = elements.dHand.children[1];
+        holeCard.classList.add('flipped');
+        elements.dScore.textContent = score(dealerHand);
+        await sleep(800);
+
         while (score(dealerHand) < 17) {
             dealerHand.push(deck.pop());
-            await updateDisplay(true);
-            await sleep(600);
+            await addCardToDisplay('dealer', dealerHand, dealerHand.length - 1);
         }
+        
         let ps = score(playerHand), ds = score(dealerHand);
         if (ds > 21 || ps > ds) end(1, "You win!");
         else if (ps < ds) end(-1, "Dealer wins.");
@@ -318,7 +331,7 @@
         elements.msg.textContent = "Adjust bet & press SPACE.";
     }
 
-    // Controls
+    // Keyboard and YouTube logic remains identical to original
     document.addEventListener('keydown', (e) => {
         if (document.activeElement.tagName === 'INPUT') return;
         if (e.code === 'Space') {
@@ -337,7 +350,6 @@
     elements.standBtn.onclick = stand;
     elements.doubleBtn.onclick = double;
 
-    // YouTube Controller (Original logic)
     document.getElementById('toggle-youtube-btn').onclick = () => {
         const p = document.getElementById('youtube-input-panel');
         p.style.display = p.style.display === 'none' ? 'block' : 'none';
