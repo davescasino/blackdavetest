@@ -10,7 +10,50 @@
         :root { --felt-green: #386641; --dark-bg: #1a202c; --card-red: #cc0000; }
         body { font-family: 'Inter', sans-serif; background-color: var(--dark-bg); color: #e2e8f0; display: flex; justify-content: center; align-items: center; height: 100vh; width: 100vw; padding: 0; margin: 0; overflow: hidden; }
         #game-container { width: 100%; height: 100%; max-width: 500px; background-color: #2d3748; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.5rem; }
-        
+        <div class="flex-shrink-0 mt-2 bg-gray-900 rounded-xl border-2 border-yellow-500 overflow-hidden">
+    <div class="bg-yellow-500 py-1">
+        <h3 class="text-center font-black text-gray-900 text-xs uppercase tracking-widest">Global Hall of Fame</h3>
+    </div>
+    
+    <div class="p-2 max-h-32 overflow-y-auto custom-scrollbar">
+        <table class="w-full text-xs font-bold">
+            <tbody id="leaderboard-body">
+                <tr class="border-b border-gray-800 text-yellow-400">
+                    <td class="py-1 w-8 text-center">1ST</td>
+                    <td class="py-1">PLACEHOLDER_NAME_1</td>
+                    <td class="py-1 text-right">$500,000</td>
+                </tr>
+                <tr class="border-b border-gray-800 text-gray-300">
+                    <td class="py-1 w-8 text-center">2ND</td>
+                    <td class="py-1">PLACEHOLDER_NAME_2</td>
+                    <td class="py-1 text-right">$250,000</td>
+                </tr>
+                <tr class="border-b border-gray-800 text-orange-400">
+                    <td class="py-1 w-8 text-center">3RD</td>
+                    <td class="py-1">PLACEHOLDER_NAME_3</td>
+                    <td class="py-1 text-right">$100,000</td>
+                </tr>
+                <tr class="border-b border-gray-800 text-gray-400">
+                    <td class="py-1 w-8 text-center">4TH</td>
+                    <td class="py-1">PLACEHOLDER_NAME_4</td>
+                    <td class="py-1 text-right">$50,000</td>
+                </tr>
+                <tr class="text-gray-500">
+                    <td class="py-1 w-8 text-center">5TH</td>
+                    <td class="py-1">PLACEHOLDER_NAME_5</td>
+                    <td class="py-1 text-right">$25,000</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    /* Styling for the scrollbar to keep it looking clean */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #1a202c; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 10px; }
+</style>
         /* Card Styling - Centered Ranks */
         .card { 
             width: 48px; height: 72px; background-color: white; border-radius: 0.4rem; 
